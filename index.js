@@ -1,29 +1,50 @@
-const puppeteer = require('puppeteer');
+#!/usr/bin/env node
 
-const wait = (delay) => new Promise((resolve) => {
-  setTimeout(() => {
-    resolve();
-  }, delay);
-});
+const winston = require('winston');
+const Scraper = require('./scraper');
 
+const DEFAULT_LOCATION = 'amsterdam';
+const DEFAULT_OUTPUT_DIR = 'output';
+
+const argv = require('yargs')
+.usage('$0 [args]')
+.options({
+  'p': {
+    alias: 'place',
+    demandOption: true,
+    default: DEFAULT_LOCATION,
+    describe: 'The place to search',
+    type: 'string',
+  },
+  'o': {
+    alias: 'outputdir',
+    demandOption: true,
+    default: DEFAULT_OUTPUT_DIR,
+    describe: 'The path to the output directory',
+    type: 'string',
+  },
+  'l': {
+    alias: 'loglevel',
+    demandOption: true,
+    default: winston.level,
+    describe: 'The log level for console output',
+    choices: Object.keys(winston.levels),
+  },
+})
+.help()
+.argv;
+
+// set up the logger
+winston.level = argv.loglevel;
+
+// create the scraper
+const scraper = new Scraper(argv.place, argv.outputdir);
+
+// run the scraper
 (async () => {
-  const browser = await puppeteer.launch();
   try {
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36');
-    await page.goto('https://www.funda.nl/koop/1015sz/+1km/');
-    await wait(5000);
-    const pageLinks = await page.$$('div.pagination-pages > a');
-    const lastPageLink = pageLinks[pageLinks.length - 1];
-    const pageMax = await lastPageLink.evaluate(link => link.getAttribute('data-pagination-page'));
-    console.log(pageMax);
-    const resultLinks = await page.$$('div.search-result-media > a');
-    for (let resultLink of resultLinks) {
-      const href = await resultLink.evaluate(link => link.getAttribute('href'));
-      console.log(href);
-    }
+    await scraper.run();
   } catch (e) {
-    console.log(e);
+    winston.log('error', e);
   }
-  browser.close();
 })();
