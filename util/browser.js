@@ -20,7 +20,7 @@ module.exports = class Browser {
   }
 
   async _open(url, delay) {
-    winston.log('info', `Loading page with URL: ${url}`);
+    winston.log('debug', `Loading page with URL: ${url}`);
     // up the count first to avoid a race condition that could
     // result in more than the max pages being opened
     this.pageCount++;
@@ -50,7 +50,7 @@ module.exports = class Browser {
   async closePage(page) {
     const index = this.pages.indexOf(page);
     if (index !== -1) {
-      winston.log('info', `Closing page with URL: ${page.url()}`);
+      winston.log('debug', `Closing page with URL: ${page.url()}`);
       this.pages.splice(index, 1);
       await page.close();
       this.pageCount--;
