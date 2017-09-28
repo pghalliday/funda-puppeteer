@@ -1,3 +1,4 @@
+const googleMaps = require('@google/maps');
 const path = require('path');
 const _ = require('lodash');
 const winston = require('winston');
@@ -17,12 +18,19 @@ const SOLD_FILTER = '/en/verkocht';
 const RENTED_FILTER = '/en/verhuurd';
 
 module.exports = class Scraper {
-  constructor(place, outputdir) {
+  constructor(place, outputdir, googleApiKey) {
     winston.log('info', `Scraping data for ${place}`);
     this.place = place;
     this.outputdir = path.join(path.resolve(outputdir), this.place, (new Date()).toISOString());
     winston.log('info', `Generating ouput in: ${this.outputdir}`);
     this.browser = new Browser();
+    if (googleApiKey) {
+      this.googleMapsClient = googleMaps.createClient({
+        key: googleApiKey,
+      });
+    } else {
+      winston.log('info', `Skipping geocoding as no Google API Key provided`);
+    }
   }
 
   async run() {
@@ -42,7 +50,7 @@ module.exports = class Scraper {
     winston.log('info', 'Scraping properties for sale');
 
     const getResults = hrefs => {
-      return Promise.all(hrefs.map(href => getResult(this.browser, `${BASE_URL}${href}`)));
+      return Promise.all(hrefs.map(href => getResult(this.browser, `${BASE_URL}${href}`, this.googleMapsClient)));
     };
 
     const getListUrl = pageNumber => {

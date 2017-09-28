@@ -7,6 +7,7 @@ const DEFAULT_LOCATION = 'amsterdam';
 const DEFAULT_OUTPUT_DIR = 'output';
 
 const argv = require('yargs')
+.env('FUNDA_PUPPETEER')
 .usage('$0 [args]')
 .options({
   'p': {
@@ -23,6 +24,12 @@ const argv = require('yargs')
     describe: 'The path to the output directory',
     type: 'string',
   },
+  'k': {
+    alias: 'google-api-key',
+    demandOption: false,
+    describe: 'The google API key for geocoding the addresses (will skip geocoding if omitted)',
+    typr: 'string',
+  },
   'l': {
     alias: 'loglevel',
     demandOption: true,
@@ -38,7 +45,7 @@ const argv = require('yargs')
 winston.level = argv.loglevel;
 
 // create the scraper
-const scraper = new Scraper(argv.place, argv.outputdir);
+const scraper = new Scraper(argv.place, argv.outputdir, argv.googleApiKey);
 
 // run the scraper
 (async () => {

@@ -7,7 +7,7 @@ const getGeocode = require('./geocode');
 
 const DEFAULT_RESULT_DELAY = 5000;
 
-module.exports = async (browser, url, delay = DEFAULT_RESULT_DELAY) => {
+module.exports = async (browser, url, googleMapsClient, delay = DEFAULT_RESULT_DELAY) => {
   winston.log('info', `loading result page: ${url}`);
   const page = await browser.openPage(url, delay);
   const id = await getId(page);
@@ -15,7 +15,7 @@ module.exports = async (browser, url, delay = DEFAULT_RESULT_DELAY) => {
   const description = await getDescription(page);
   const detail = await getDetail(page);
   await browser.closePage(page);
-  const geocode = await getGeocode(address);
+  const geocode = await getGeocode(googleMapsClient, address);
   const result = {
     url,
     id,
