@@ -1,5 +1,4 @@
 const winston = require('winston');
-const util = require('util');
 const getId = require('./id');
 const getAddress = require('./address');
 const getDescription = require('./description');
@@ -25,6 +24,6 @@ module.exports = async (browser, url, delay = DEFAULT_RESULT_DELAY) => {
     detail,
     geocode,
   };
-  winston.log('info', util.format(result));
+  winston.log('info', JSON.stringify(result, null, 2));
   return result;
 }

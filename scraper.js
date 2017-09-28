@@ -10,11 +10,11 @@ const RESULT_DELAY = 5000;
 
 const BASE_URL = 'https://www.funda.nl';
 
-const FOR_SALE_PATH = '/koop';
-const FOR_RENT_PATH = '/huur';
-const NEW_BUILDS_PATH = '/nieuwbouw';
-const SOLD_FILTER = '/verkocht';
-const RENTED_FILTER = '/verhuurd';
+const FOR_SALE_PATH = '/en/koop';
+const FOR_RENT_PATH = '/en/huur';
+const NEW_BUILDS_PATH = '/en/nieuwbouw';
+const SOLD_FILTER = '/en/verkocht';
+const RENTED_FILTER = '/en/verhuurd';
 
 module.exports = class Scraper {
   constructor(place, outputdir) {
