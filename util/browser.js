@@ -21,7 +21,6 @@ module.exports = class Browser {
 
   async _open(url, delay) {
     winston.log('info', `Loading page with URL: ${url}`);
-    winston.log('info', `Waiting: ${delay}ms`);
     // up the count first to avoid a race condition that could
     // result in more than the max pages being opened
     this.pageCount++;

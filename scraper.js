@@ -1,9 +1,11 @@
 const path = require('path');
+const _ = require('lodash');
 const winston = require('winston');
-const Browser = require('./browser');
-const range = require('./range');
+const Browser = require('./util/browser');
+const range = require('./util/range');
+const getList = require('./list');
+const getResult = require('./result');
 
-const LIST_DELAY = 5000;
 const RESULT_DELAY = 5000;
 
 const BASE_URL = 'https://www.funda.nl';
@@ -39,59 +41,29 @@ module.exports = class Scraper {
   async _forSale() {
     winston.log('info', 'Scraping properties for sale');
 
-    const createResult = async page => {
-      const detailDiv = await page.$('div.object-detail');
-      const id = await detailDiv.evaluate(element => element.getAttribute('data-interaction-tinyid'));
-      const titleElement = await page.$('h1.object-header-title');
-      const address = await titleElement.evaluate(element => element.textContent);
-      const url = page.url();
-      await this.browser.closePage(page);
-      const result = {
-        id,
-        address,
-        url,
-      };
-      winston.log('info', result);
-      return result;
-    }
-
-    const getResults = async page => {
-      const resultLinks = await page.$$('div.search-result-media > a');
-      return Promise.all(resultLinks.map(resultLink => {
-        return resultLink.evaluate(link => link.getAttribute('href'));
-      })).then(hrefs => {
-        // we have all the hrefs so we can close the list page,
-        // this should prevent a dead lock when there are many list pages
-        this.browser.closePage(page);
-        // filter invalid links and get the result pages
-        return Promise.all(hrefs.filter(href => href.startsWith(`${FOR_SALE_PATH}/${this.place}`)).map(async href => {
-          const resultPage = await this.browser.openPage(`${BASE_URL}${href}`, RESULT_DELAY);
-          return createResult(resultPage);
-        }));
-      });
+    const getResults = hrefs => {
+      return Promise.all(hrefs.map(href => getResult(this.browser, `${BASE_URL}${href}`)));
     };
 
-    const getListPage = pageNumber => {
-      return this.browser.openPage(`${BASE_URL}${FOR_SALE_PATH}/${this.place}/p${pageNumber}/`, LIST_DELAY);
+    const getListUrl = pageNumber => {
+      return `${BASE_URL}${FOR_SALE_PATH}/${this.place}/p${pageNumber}/`;
     };
+    const filter = `${FOR_SALE_PATH}/${this.place}`;
 
     const getPageResults = async pageNumber => {
-      const page = await getListPage(pageNumber);
-      return getResults(page);
+      const list = await getList(this.browser, getListUrl(pageNumber), filter);
+      return getResults(list.hrefs);
     };
 
-    const page = await getListPage(1);
-    const pageLinks = await page.$$('div.pagination-pages > a');
-    const lastPageLink = pageLinks[pageLinks.length - 1];
-    const pageMax = await lastPageLink.evaluate(link => link.getAttribute('data-pagination-page'));
+    const list = await getList(this.browser, getListUrl(1), filter);
 
-    winston.log('info', `Scraping ${pageMax} pages of results`);
+    winston.log('info', `Scraping ${list.pageCount} pages of results`);
 
-    let promises = [getResults(page)];
-    if (pageMax) {
-      const pageMaxInt = parseInt(pageMax);
-      if (pageMaxInt > 1) {
-        const pages = range(2, pageMaxInt);
+    let promises = [getResults(list.hrefs)];
+    if (list.pageCount) {
+      const pageCountInt = parseInt(list.pageCount);
+      if (pageCountInt > 1) {
+        const pages = range(2, pageCountInt);
         promises = promises.concat(pages.map(pageNumber => getPageResults(pageNumber)));
       }
     }
