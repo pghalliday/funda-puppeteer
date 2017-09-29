@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const winston = require('winston');
-const Scraper = require('./scraper');
+const scrape = require('./scrape');
 
 const DEFAULT_LOCATION = 'amsterdam';
 const DEFAULT_OUTPUT_DIR = 'output';
@@ -44,13 +44,10 @@ const argv = require('yargs')
 // set up the logger
 winston.level = argv.loglevel;
 
-// create the scraper
-const scraper = new Scraper(argv.place, argv.outputdir, argv.googleApiKey);
-
 // run the scraper
 (async () => {
   try {
-    await scraper.run();
+    await scrape(argv.place, argv.outputdir, argv.googleApiKey);
   } catch (e) {
     winston.log('error', e);
   }

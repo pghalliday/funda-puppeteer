@@ -32,41 +32,32 @@ const SEARCHES = [{
   outputPath: 'rented',
 }];
 
-module.exports = class Scraper {
-  constructor(place, outputdir, googleApiKey) {
-    winston.log('info', `Scraping data for ${place}`);
-    this.place = place;
-    this.outputdir = path.join(path.resolve(outputdir), this.place, (new Date()).toISOString());
-    winston.log('info', `Generating output in: ${this.outputdir}`);
-    mkdirp.sync(this.outputdir);
-    this.browser = new Browser();
-    if (googleApiKey) {
-      this.googleMapsClient = googleMaps.createClient({
-        key: googleApiKey,
-      });
-    } else {
-      winston.log('info', `Skipping geocoding as no Google API Key provided`);
-    }
+module.exports = async (place, outputdir, googleApiKey) => {
+  winston.log('info', `Scraping data for ${place}`);
+  outputdir = path.join(path.resolve(outputdir), place, (new Date()).toISOString());
+  winston.log('info', `Generating output in: ${outputdir}`);
+  mkdirp.sync(outputdir);
+  let googleMapsClient;
+  if (googleApiKey) {
+    googleMapsClient = googleMaps.createClient({
+      key: googleApiKey,
+    });
+  } else {
+    winston.log('info', `Skipping geocoding as no Google API Key provided`);
   }
-
-  async run() {
-    winston.log('info', `Starting`);
-    await this.browser.init();
-    await Promise.all(SEARCHES.map(this._collect.bind(this)));
-    this.browser.close();
-  }
-
-  async _collect(params) {
+  const browser = new Browser();
+  await browser.init();
+  await Promise.all(SEARCHES.map(async params => {
     winston.log('info', `${params.description}: Scraping`);
-    const outputdir = path.join(this.outputdir, params.outputPath);
-    winston.log('info', `${params.description}: Generating output in: ${outputdir}`);
-    mkdirp.sync(outputdir);
+    const searchdir = path.join(outputdir, params.outputPath);
+    winston.log('info', `${params.description}: Generating output in: ${searchdir}`);
+    mkdirp.sync(searchdir);
 
     const getResults = hrefs => {
-      return Promise.all(hrefs.map(href => getResult(this.browser, `${BASE_URL}${href}`, this.googleMapsClient).then(result => {
+      return Promise.all(hrefs.map(href => getResult(browser, `${BASE_URL}${href}`, googleMapsClient).then(result => {
         if (result) {
           return new Promise((resolve, reject) => {
-            const out = path.join(outputdir, result.ref);
+            const out = path.join(searchdir, result.ref);
             fs.writeFile(out, JSON.stringify(result, null, 2), err => {
               if (err) {
                 reject(err);
@@ -84,16 +75,16 @@ module.exports = class Scraper {
     };
 
     const getListUrl = pageNumber => {
-      return `${BASE_URL}${params.urlPath}/${this.place}${params.filter}/p${pageNumber}/`;
+      return `${BASE_URL}${params.urlPath}/${place}${params.filter}/p${pageNumber}/`;
     };
     const filter = `${params.urlPath}`;
 
     const getPageResults = async pageNumber => {
-      const list = await getList(this.browser, getListUrl(pageNumber), filter);
+      const list = await getList(browser, getListUrl(pageNumber), filter);
       return getResults(list.hrefs);
     };
 
-    const list = await getList(this.browser, getListUrl(1), filter);
+    const list = await getList(browser, getListUrl(1), filter);
 
     winston.log('info', `${params.description}: Scraping ${list.pageCount} pages of results`);
 
@@ -107,5 +98,6 @@ module.exports = class Scraper {
     const results = [].concat(...resultArrays);
 
     winston.log('info', `${params.description}: Count: ${results.length}`);
-  }
-}
+  }));
+  browser.close();
+};

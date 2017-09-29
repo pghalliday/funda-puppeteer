@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "bin": "./index.js",
-  "main": "./scraper.js",
+  "main": "./scrape.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
