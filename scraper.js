@@ -62,10 +62,10 @@ module.exports = class Scraper {
     winston.log('info', `Starting`);
     await this.browser.init();
     await Promise.all([
-      this._collect(FOR_SALE_PARAMS),
-      this._collect(FOR_RENT_PARAMS),
+      // this._collect(FOR_SALE_PARAMS),
+      // this._collect(FOR_RENT_PARAMS),
       this._collect(SOLD_PARAMS),
-      this._collect(RENTED_PARAMS),
+      // this._collect(RENTED_PARAMS),
     ]);
     this.browser.close();
   }
