@@ -2,7 +2,8 @@
   "name": "funda-puppeteer",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "bin": "./index.js",
+  "main": "./scraper.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,7 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "@google/maps": "^0.4.3",
-    "lodash": "^4.17.4",
     "mkdirp": "^0.5.1",
     "puppeteer": "^0.10.2",
     "winston": "^2.3.1",

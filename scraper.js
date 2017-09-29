@@ -1,7 +1,6 @@
 const googleMaps = require('@google/maps');
 const path = require('path');
 const fs = require('fs');
-const _ = require('lodash');
 const winston = require('winston');
 const Browser = require('./util/browser');
 const range = require('./util/range');
