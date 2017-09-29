@@ -1,10 +1,10 @@
 module.exports = async (page) => {
-  const detailDiv = await page.$('div.object-kenmerken-body');
-  return detailDiv.evaluate(element => {
-    const zip = (labels, details) => {
+  const featuresDiv = await page.$('div.object-kenmerken-body');
+  return featuresDiv.evaluate(element => {
+    const zip = (labels, features) => {
       return labels.reduce((zipped, label, index) => ({
         ...zipped,
-        [label]: details[index],
+        [label]: features[index],
       }), {});
     };
 
@@ -27,17 +27,17 @@ module.exports = async (page) => {
           return {};
         }
       });
-      const groupdetails = [...element.querySelectorAll(':scope > dt.object-kenmerken-group-header + dd + dd > dl')].map(element => parsedl(element));
+      const groupfeatures = [...element.querySelectorAll(':scope > dt.object-kenmerken-group-header + dd + dd > dl')].map(element => parsedl(element));
       const labels = [...element.querySelectorAll(':scope > dt:not(.object-kenmerken-group-header)')].map(element => element.textContent.trim());
-      const details = [...element.querySelectorAll(':scope > dt:not(.object-kenmerken-group-header) + dd')].map(element => element.textContent.trim());
+      const features = [...element.querySelectorAll(':scope > dt:not(.object-kenmerken-group-header) + dd')].map(element => element.textContent.trim());
       return {
-        ...zip(labels, details),
-        ...zip(groups, merge(grouplinks, groupdetails)),
+        ...zip(labels, features),
+        ...zip(groups, merge(grouplinks, groupfeatures)),
       };
     };
 
     const labels = [...element.querySelectorAll(':scope > h3.object-kenmerken-list-header')].map(element => element.textContent.trim());
-    const details = [...element.querySelectorAll(':scope > h3.object-kenmerken-list-header + dl')].map(element => parsedl(element));
-    return zip(labels, details);
+    const features = [...element.querySelectorAll(':scope > h3.object-kenmerken-list-header + dl')].map(element => parsedl(element));
+    return zip(labels, features);
   });
 };
