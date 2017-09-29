@@ -16,6 +16,7 @@ module.exports = async (browser, url, googleMapsClient, delay = DEFAULT_RESULT_D
   });
   const id = await getId(page);
   if (id) {
+    const ref = url.split('/').slice(-2)[0];
     const address = await getAddress(page);
     const description = await getDescription(page);
     const history = await getHistory(page);
@@ -23,8 +24,9 @@ module.exports = async (browser, url, googleMapsClient, delay = DEFAULT_RESULT_D
     await browser.closePage(page);
     const geocode = await getGeocode(googleMapsClient, address);
     const result = {
-      url,
       id,
+      ref,
+      url,
       address,
       description,
       history,

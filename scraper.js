@@ -13,33 +13,27 @@ const RESULT_DELAY = 5000;
 
 const BASE_URL = 'https://www.funda.nl';
 
-const FOR_SALE_PARAMS = {
+const SEARCHES = [{
   description: 'For Sale',
   urlPath: '/en/koop',
   filter: '',
   outputPath: 'for-sale',
-};
-
-const FOR_RENT_PARAMS = {
+}, {
   description: 'For Rent',
   urlPath: '/en/huur',
   filter: '',
   outputPath: 'for-rent',
-};
-
-const SOLD_PARAMS = {
+}, {
   description: 'Sold',
   urlPath: '/en/koop',
   filter: '/verkocht',
   outputPath: 'sold',
-};
-
-const RENTED_PARAMS = {
+}, {
   description: 'Rented',
   urlPath: '/en/huur',
   filter: '/verhuurd',
   outputPath: 'rented',
-};
+}];
 
 module.exports = class Scraper {
   constructor(place, outputdir, googleApiKey) {
@@ -61,12 +55,7 @@ module.exports = class Scraper {
   async run() {
     winston.log('info', `Starting`);
     await this.browser.init();
-    await Promise.all([
-      // this._collect(FOR_SALE_PARAMS),
-      // this._collect(FOR_RENT_PARAMS),
-      this._collect(SOLD_PARAMS),
-      // this._collect(RENTED_PARAMS),
-    ]);
+    await Promise.all(SEARCHES.map(this._collect.bind(this)));
     this.browser.close();
   }
 
@@ -80,7 +69,7 @@ module.exports = class Scraper {
       return Promise.all(hrefs.map(href => getResult(this.browser, `${BASE_URL}${href}`, this.googleMapsClient).then(result => {
         if (result) {
           return new Promise((resolve, reject) => {
-            const out = path.join(outputdir, result.id);
+            const out = path.join(outputdir, result.ref);
             fs.writeFile(out, JSON.stringify(result, null, 2), err => {
               if (err) {
                 reject(err);
