@@ -36,8 +36,8 @@ module.exports = async (page) => {
       };
     };
 
-    const labels = [...element.querySelectorAll(':scope > .object-kenmerken-list-header')].map(element => element.textContent.trim());
-    const details = [...element.querySelectorAll(':scope > .object-kenmerken-list-header + dl')].map(element => parsedl(element));
+    const labels = [...element.querySelectorAll(':scope > h3.object-kenmerken-list-header')].map(element => element.textContent.trim());
+    const details = [...element.querySelectorAll(':scope > h3.object-kenmerken-list-header + dl')].map(element => parsedl(element));
     return zip(labels, details);
   });
 };

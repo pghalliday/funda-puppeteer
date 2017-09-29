@@ -11,19 +11,23 @@ module.exports = async (browser, url, googleMapsClient, delay = DEFAULT_RESULT_D
   winston.log('info', `loading result page: ${url}`);
   const page = await browser.openPage(url, delay);
   const id = await getId(page);
-  const address = await getAddress(page);
-  const description = await getDescription(page);
-  const detail = await getDetail(page);
-  await browser.closePage(page);
-  const geocode = await getGeocode(googleMapsClient, address);
-  const result = {
-    url,
-    id,
-    address,
-    description,
-    detail,
-    geocode,
-  };
-  winston.log('info', JSON.stringify(result, null, 2));
-  return result;
+  if (id) {
+    const address = await getAddress(page);
+    const description = await getDescription(page);
+    const detail = await getDetail(page);
+    await browser.closePage(page);
+    const geocode = await getGeocode(googleMapsClient, address);
+    const result = {
+      url,
+      id,
+      address,
+      description,
+      detail,
+      geocode,
+    };
+    winston.log('debug', JSON.stringify(result, null, 2));
+    return result;
+  } else {
+    return undefined;
+  }
 }
