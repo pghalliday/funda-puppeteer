@@ -8,8 +8,6 @@ const getList = require('./list');
 const getResult = require('./result');
 const mkdirp = require('mkdirp');
 
-const RESULT_DELAY = 5000;
-
 const BASE_URL = 'https://www.funda.nl';
 
 const SEARCHES = [{
