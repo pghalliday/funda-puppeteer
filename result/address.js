@@ -1,4 +1,5 @@
-module.exports = async (page) => {
+module.exports.get = async ({page}) => {
   const titleElement = await page.$('h1.object-header-title');
-  return await titleElement.evaluate(element => element.textContent.trim());
+  const rawAddress =  await titleElement.evaluate(element => element.textContent.trim());
+  return rawAddress.replace('\n', ',').replace(/\s+/g, ' ') + ', Netherlands';
 };

@@ -1,41 +1,87 @@
+const fs = require('fs');
+const sanitize = require('sanitize-filename');
+const path = require('path');
+const mkdirp = require('mkdirp');
 const winston = require('winston');
-const getId = require('./id');
-const getAddress = require('./address');
-const getDescription = require('./description');
-const getHistory = require('./history');
-const getFeatures = require('./features');
-const getGeocode = require('./geocode');
+const _id = require('./id');
+const _address = require('./address');
+const _description = require('./description');
+const _history = require('./history');
+const _features = require('./features');
+const checkAge = require('../util/check-age').checkAge;
 
-const DEFAULT_RESULT_DELAY = 5000;
+const DEFAULTS = {
+  DELAY: 5000,
+  MAX_RECHECK_DAYS: 7,
+  DESCRIPTION: {
+    DELAY: _description.DEFAULTS.DELAY,
+  },
+  FEATURES: {
+    DELAY: _features.DEFAULTS.DELAY,
+  },
+};
+module.exports.DEFAULTS = DEFAULTS;
 
-module.exports = async (browser, url, googleMapsClient, delay = DEFAULT_RESULT_DELAY) => {
-  winston.log('info', `loading result page: ${url}`);
-  const page = await browser.openPage(url, delay);
-  page.on('console', (...args) => {
-    winston.log('info', ...args);
-  });
-  const id = await getId(page);
-  if (id) {
-    const ref = url.split('/').slice(-2)[0];
-    const address = await getAddress(page);
-    const description = await getDescription(page);
-    const history = await getHistory(page);
-    const features = await getFeatures(page);
-    await browser.closePage(page);
-    const geocode = await getGeocode(googleMapsClient, address);
-    const result = {
-      id,
-      ref,
-      url,
-      address,
-      description,
-      history,
-      features,
-      geocode,
-    };
-    winston.log('debug', JSON.stringify(result, null, 2));
-    return result;
-  } else {
-    return undefined;
+module.exports.collect = async ({
+  browser,
+  url,
+  outputdir,
+  timestamp,
+  maxRecheckDays = DEFAULTS.MAX_RECHECK_DAYS,
+  delay = DEFAULTS.DELAY,
+  description: {
+    delay: descriptionDelay = DEFAULTS.DESCRIPTION.DELAY,
+  } = {},
+  features: {
+    delay: featuresDelay = DEFAULTS.FEATURES.DELAY,
+  } = {},
+} = {}) => {
+  const urlParts = url.split('/').slice(-3);
+  const place = urlParts[0];
+  const ref = urlParts[1];
+  outputdir = path.join(outputdir, place, ref);
+  mkdirp.sync(outputdir);
+  if (checkAge(outputdir, timestamp, maxRecheckDays)) {
+    winston.log('info', `loading result: ${place}/${ref}`);
+    const page = await browser.openPage(url, delay);
+    page.on('console', (...args) => {
+      winston.log('debug', ...args);
+    });
+    const id = await _id.get({page});
+    if (id) {
+      const address = await _address.get({page});
+      const sanitizedAddress = sanitize(address);
+      const description = await _description.get({page, delay: descriptionDelay});
+      const history = await _history.get({page});
+      const features = await _features.get({page, delay: featuresDelay});
+      await browser.closePage(page);
+      const result = {
+        id,
+        ref,
+        place,
+        url,
+        address,
+        sanitizedAddress,
+        description,
+        history,
+        features,
+      };
+      const resultJSON = JSON.stringify(result, null, 2);
+      winston.log('debug', resultJSON);
+      return new Promise((resolve, reject) => {
+        const out = path.join(outputdir, `${timestamp}.json`);
+        fs.writeFile(out, resultJSON, err => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result);
+          }
+        });
+      });
+    } else {
+      const err = new Error(`Failed to load details for ${href}`);
+      winston.log('warning', err);
+      throw err;
+    }
   }
 }

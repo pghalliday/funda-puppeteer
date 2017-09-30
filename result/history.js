@@ -1,4 +1,4 @@
-module.exports = async (page) => {
+module.exports.get = async ({page}) => {
   const divs = await page.$$('div.object-kenmerken-body');
   const historyDiv = divs.length > 1 ? divs[0] : undefined;
   if (historyDiv) {

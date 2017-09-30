@@ -1,18 +1,17 @@
 {
   "name": "funda-puppeteer",
   "version": "1.0.0",
-  "description": "",
-  "bin": "./index.js",
-  "main": "./scrape.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "Collect and archive data from https://www.funda.nl/",
+  "bin": "./bin/index.js",
+  "main": "./index.js",
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google/maps": "^0.4.3",
     "mkdirp": "^0.5.1",
+    "moment": "^2.18.1",
     "puppeteer": "^0.10.2",
+    "sanitize-filename": "^1.6.1",
     "winston": "^2.3.1",
     "yargs": "^8.0.2"
   }

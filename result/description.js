@@ -1,8 +1,11 @@
-const wait = require('../util/wait');
+const wait = require('../util/wait').wait;
 
-const DEFAULT_EXPAND_DELAY = 1000;
+const DEFAULTS = {
+  DELAY: 1000,
+};
+module.exports.DEFAULTS = DEFAULTS;
 
-module.exports = async (page, delay = DEFAULT_EXPAND_DELAY) => {
+module.exports.get = async ({page, delay = DEFAULTS.DELAY}) => {
   // click the expand description button if there is one  and wait for it to load
   const expandButton = await page.$('button.object-description-open-button');
   if (expandButton) {

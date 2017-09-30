@@ -1,13 +1,16 @@
 const winston = require('winston');
 const puppeteer = require('puppeteer');
-const wait = require('./wait');
+const wait = require('./wait').wait;
 
-const DEFAULT_MAX_CONCURRENT_PAGES = 16;
-const DEFAULT_PAGE_DELAY = 0;
-const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36';
+const DEFAULTS = {
+  MAX_CONCURRENT_PAGES: 16,
+  DELAY: 0,
+  USER_AGENT: 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36',
+};
+module.exports.DEFAULTS = DEFAULTS;
 
-module.exports = class Browser {
-  constructor(maxConcurrentPages = DEFAULT_MAX_CONCURRENT_PAGES, userAgent = DEFAULT_USER_AGENT) {
+module.exports.Browser = class {
+  constructor({maxConcurrentPages = DEFAULTS.MAX_CONCURRENT_PAGES, userAgent = DEFAULTS.USER_AGENT}) {
     this.maxConcurrentPages = maxConcurrentPages;
     this.userAgent = userAgent;
   }
@@ -34,7 +37,7 @@ module.exports = class Browser {
     return page;
   }
 
-  async openPage(url, delay = DEFAULT_PAGE_DELAY) {
+  async openPage(url, delay = DEFAULTS.PAGE_DELAY) {
     if (this.pageCount < this.maxConcurrentPages) {
       return this._open(url, delay);
     } else {
@@ -68,6 +71,7 @@ module.exports = class Browser {
     // reset the pageCount, etc. This prevents
     // errors from asynchronous calls to closePage
     // that may not have happened yet
+    winston.log('debug', 'Closing the browser');
     this.pageCount = 0;
     this.pages = [];
     this.queue = [];
